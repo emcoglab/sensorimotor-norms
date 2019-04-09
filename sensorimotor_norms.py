@@ -60,13 +60,15 @@ class SensorimotorNorms(object):
         self.data[ColNames.Word] = self.data[ColNames.Word].str.strip()
         self.data[ColNames.Word] = self.data[ColNames.Word].str.lower()
 
+        self._words: set = set(self.data[ColNames.Word])
+
     def iter_words(self) -> Iterable[str]:
         for word in self.data[ColNames.Word]:
             yield word
 
     def has_word(self, word: str) -> bool:
         """True if a word is in the norms, else False."""
-        return word in self.iter_words()
+        return word in self._words
 
     def vector_for_word(self, word: str) -> List[float]:
         """
