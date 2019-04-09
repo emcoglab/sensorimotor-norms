@@ -14,16 +14,16 @@ caiwingfield.net
 2019
 ---------------------------
 """
-
+from typing import List, Iterable
 
 from pandas import DataFrame, read_csv
 
-from .exceptions import LabelNotInNormsError
+from .exceptions import WordNotInNormsError
 from .preferences import Preferences
 
 
 class ColNames(object):
-    """Column names used in sensorimotor data"""
+    """Column names used in sensorimotor data."""
 
     Word = "word"
 
@@ -60,14 +60,28 @@ class SensorimotorNorms(object):
         self.data[ColNames.Word] = self.data[ColNames.Word].str.strip()
         self.data[ColNames.Word] = self.data[ColNames.Word].str.lower()
 
-    def vector_for_word(self, word):
+    def iter_words(self) -> Iterable[str]:
+        for word in self.data[ColNames.Word]:
+            yield word
+
+    def has_word(self, word: str) -> bool:
+        """True if a word is in the norms, else False."""
+        return word in self.iter_words()
+
+    def vector_for_word(self, word: str) -> List[float]:
+        """
+        A vector of sensorimotor data associated with each word.
+        :param word:
+        :return:
+        :raises: WordNotInNormsError
+        """
         row = self.data[self.data[ColNames.Word] == word]
 
         # Make sure we only got one row
         n_rows = row.shape[0]
         if n_rows is 0:
             # No rows: word wasn't found
-            raise LabelNotInNormsError(word)
+            raise WordNotInNormsError(word)
         elif n_rows > 1:
             # More than one row: word wasn't a unique row identifier
             # Something has gone wrong!
@@ -77,3 +91,16 @@ class SensorimotorNorms(object):
             row.iloc[0][col_name]
             for col_name in SensorimotorNorms.DataColNames
         ]
+
+    def matrix_for_words(self, words: List[str]):
+        """
+        Returns a data matrix of words-x-dims.
+        :param words:
+        :return:
+        :raises: WordNotInNormsError
+        """
+        for word in words:
+            if not self.has_word(word):
+                raise WordNotInNormsError(word)
+        data_for_words = self.data[self.data[ColNames.Word].isin(words)]
+        return data_for_words[SensorimotorNorms.DataColNames].values

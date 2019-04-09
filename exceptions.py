@@ -16,19 +16,8 @@ caiwingfield.net
 """
 
 
-class LabelNotInNormsError(LookupError):
+class WordNotInNormsError(LookupError):
     """
-    An error raised when a label is not found in the norms.
+    An error raised when a word is not found in the norms.
     """
-
-    """ Label not found. """
-    def __init__(self, *args, **kwargs):  # real signature unknown
-        pass
-
-    def __str__(self, *args, **kwargs):  # real signature unknown
-        """ Return str(self). """
-        pass
-
-    @property
-    def message(self) -> str:
-        return self.args[0]
+    pass
