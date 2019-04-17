@@ -25,22 +25,22 @@ from .preferences import Preferences
 class ColNames(object):
     """Column names used in sensorimotor data."""
 
-    Word = "word"
+    Word = "Word"
 
     # Motor
-    Head          = "head.mean"
-    Mouth         = "mouth.mean"
-    Hand          = "hand.mean"
-    Foot          = "foot.mean"
-    Torso         = "torso.mean"
+    Head          = "Head.mean"
+    Mouth         = "Mouth.mean"
+    Hand          = "Hand_arm.mean"
+    Foot          = "Foot_leg.mean"
+    Torso         = "Torso.mean"
 
     # Sensory
-    Touch         = "haptic.mean"
-    Hearing       = "auditory.mean"
-    Seeing        = "visual.mean"
-    Smelling      = "olfactory.mean"
-    Tasting       = "gustatory.mean"
-    Interoception = "interoception.mean"
+    Touch         = "Haptic.mean"
+    Hearing       = "Auditory.mean"
+    Seeing        = "Visual.mean"
+    Smelling      = "Olfactory.mean"
+    Tasting       = "Gustatory.mean"
+    Interoception = "Interoceptive.mean"
 
 
 class SensorimotorNorms(object):

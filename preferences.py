@@ -23,10 +23,6 @@ class Preferences:
                           "caiwingfield",
                           "Box Sync",
                           "LANGBOOT Project",
-                          "Experiments",
-                          "Phase 1 - Categorisation",
-                          "Experiment 1.4 - Category production",
-                          "Data & Analysis",
-                          "Data for proximity measures")
+                          "Model")
 
-    sensorimotor_norms_path = path.join(_data_dir, "sensorimotor_norms_for_39731_words_low_N_known_removed.csv")
+    sensorimotor_norms_path = path.join(_data_dir, "FINAL_sensorimotor_norms_for_39707_words.csv")
