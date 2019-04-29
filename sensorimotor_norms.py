@@ -54,7 +54,9 @@ class SensorimotorNorms(object):
 
     def __init__(self):
         self.data: DataFrame = read_csv(Preferences.sensorimotor_norms_path, index_col=None, header=0,
-                                        usecols=[ColNames.Word] + SensorimotorNorms.DataColNames)
+                                        usecols=[ColNames.Word] + SensorimotorNorms.DataColNames,
+                                        # Prevent the "nan" item from being interpreted as a NaN
+                                        dtype={ColNames.Word: str}, keep_default_na=False)
 
         # Trim whitespace and convert words to lower case
         self.data[ColNames.Word] = self.data[ColNames.Word].str.strip()
