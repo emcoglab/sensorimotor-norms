@@ -101,12 +101,10 @@ class SensorimotorNorms(object):
             for col_name in SensorimotorNorms.VectorColNames
         ]
 
-    def prevalence(self, word: str) -> float:
+    def fraction_known(self, word: str) -> float:
         """
         Returns the fraction of participants who knew a word.
-        (A.k.a. percent known, though it's not a percent; a.k.a prevalence.)
         :param word:
-            The word whose prevalence is requested
         :return:
             Prevalence of the word
         :raises: WordNotInNormsError
@@ -129,10 +127,7 @@ class SensorimotorNorms(object):
         n_known_action     = row.iloc[0][ColNames.n_known_action]
         n_list_action      = row.iloc[0][ColNames.n_list_action]
 
-        # Prevalence is computed from the combined know-as-perceptual and known-as-action counts
-        prevalence = (n_known_perceptual + n_known_action) / (n_list_perceptual + n_list_action)
-
-        return prevalence
+        return (n_known_perceptual + n_known_action) / (n_list_perceptual + n_list_action)
 
     def matrix_for_words(self, words: List[str]):
         """
