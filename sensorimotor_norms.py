@@ -25,47 +25,52 @@ from .preferences import Preferences
 class ColNames(object):
     """Column names used in sensorimotor data."""
 
-    Word = "Word"
+    word = "Word"
 
     # Motor
-    Head          = "Head.mean"
-    Mouth         = "Mouth.mean"
-    Hand          = "Hand_arm.mean"
-    Foot          = "Foot_leg.mean"
-    Torso         = "Torso.mean"
+    head          = "Head.mean"
+    mouth         = "Mouth.mean"
+    hand          = "Hand_arm.mean"
+    foot          = "Foot_leg.mean"
+    torso         = "Torso.mean"
 
     # Sensory
-    Touch         = "Haptic.mean"
-    Hearing       = "Auditory.mean"
-    Seeing        = "Visual.mean"
-    Smelling      = "Olfactory.mean"
-    Tasting       = "Gustatory.mean"
-    Interoception = "Interoceptive.mean"
+    touch         = "Haptic.mean"
+    hearing       = "Auditory.mean"
+    seeing        = "Visual.mean"
+    smelling      = "Olfactory.mean"
+    tasting       = "Gustatory.mean"
+    interoception = "Interoceptive.mean"
+
+    # Other stats
+    n_known_perceptual = "N_known.perceptual"
+    n_list_perceptual  = "List_N.perceptual"
+    n_known_action     = "N_known.action"
+    n_list_action      = "List_N.action"
 
 
 class SensorimotorNorms(object):
 
-    DataColNames = [
+    VectorColNames = [
         # Sensory
-        ColNames.Touch, ColNames.Hearing, ColNames.Seeing, ColNames.Smelling, ColNames.Tasting, ColNames.Interoception,
+        ColNames.touch, ColNames.hearing, ColNames.seeing, ColNames.smelling, ColNames.tasting, ColNames.interoception,
         # Motor
-        ColNames.Head, ColNames.Mouth, ColNames.Hand, ColNames.Foot, ColNames.Torso,
+        ColNames.head, ColNames.mouth, ColNames.hand, ColNames.foot, ColNames.torso,
     ]
 
     def __init__(self):
         self.data: DataFrame = read_csv(Preferences.sensorimotor_norms_path, index_col=None, header=0,
-                                        usecols=[ColNames.Word] + SensorimotorNorms.DataColNames,
                                         # Prevent the "nan" item from being interpreted as a NaN
-                                        dtype={ColNames.Word: str}, keep_default_na=False)
+                                        dtype={ColNames.word: str}, keep_default_na=False)
 
         # Trim whitespace and convert words to lower case
-        self.data[ColNames.Word] = self.data[ColNames.Word].str.strip()
-        self.data[ColNames.Word] = self.data[ColNames.Word].str.lower()
+        self.data[ColNames.word] = self.data[ColNames.word].str.strip()
+        self.data[ColNames.word] = self.data[ColNames.word].str.lower()
 
-        self._words: set = set(self.data[ColNames.Word])
+        self._words: set = set(self.data[ColNames.word])
 
     def iter_words(self) -> Iterable[str]:
-        for word in self.data[ColNames.Word]:
+        for word in self.data[ColNames.word]:
             yield word
 
     def has_word(self, word: str) -> bool:
@@ -79,7 +84,7 @@ class SensorimotorNorms(object):
         :return:
         :raises: WordNotInNormsError
         """
-        row = self.data[self.data[ColNames.Word] == word]
+        row = self.data[self.data[ColNames.word] == word]
 
         # Make sure we only got one row
         n_rows = row.shape[0]
@@ -93,8 +98,41 @@ class SensorimotorNorms(object):
 
         return [
             row.iloc[0][col_name]
-            for col_name in SensorimotorNorms.DataColNames
+            for col_name in SensorimotorNorms.VectorColNames
         ]
+
+    def prevalence(self, word: str) -> float:
+        """
+        Returns the fraction of participants who knew a word.
+        (A.k.a. percent known, though it's not a percent; a.k.a prevalence.)
+        :param word:
+            The word whose prevalence is requested
+        :return:
+            Prevalence of the word
+        :raises: WordNotInNormsError
+            When the requested word is not in the norms
+        """
+        row = self.data[self.data[ColNames.word] == word]
+
+        # Make sure we only got one row
+        n_rows = row.shape[0]
+        if n_rows is 0:
+            # No rows: word wasn't found
+            raise WordNotInNormsError(word)
+        elif n_rows > 1:
+            # More than one row: word wasn't a unique row identifier
+            # Something has gone wrong!
+            raise Exception()
+
+        n_known_perceptual = row.iloc[0][ColNames.n_known_perceptual]
+        n_list_perceptual  = row.iloc[0][ColNames.n_list_perceptual]
+        n_known_action     = row.iloc[0][ColNames.n_known_action]
+        n_list_action      = row.iloc[0][ColNames.n_list_action]
+
+        # Prevalence is computed from the combined know-as-perceptual and known-as-action counts
+        prevalence = (n_known_perceptual + n_known_action) / (n_list_perceptual + n_list_action)
+
+        return prevalence
 
     def matrix_for_words(self, words: List[str]):
         """
@@ -106,5 +144,5 @@ class SensorimotorNorms(object):
         for word in words:
             if not self.has_word(word):
                 raise WordNotInNormsError(word)
-        data_for_words = self.data[self.data[ColNames.Word].isin(words)]
-        return data_for_words[SensorimotorNorms.DataColNames].values
+        data_for_words = self.data[self.data[ColNames.word].isin(words)]
+        return data_for_words[SensorimotorNorms.VectorColNames].values
