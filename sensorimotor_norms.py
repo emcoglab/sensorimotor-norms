@@ -106,7 +106,8 @@ class SensorimotorNorms(object):
         Returns the fraction of participants who knew a word.
         :param word:
         :return:
-            Prevalence of the word
+            Fraction of participants who knew the word.
+            This is guaranteed to be in the range [0, 1].
         :raises: WordNotInNormsError
             When the requested word is not in the norms
         """
