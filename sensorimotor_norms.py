@@ -67,15 +67,16 @@ class SensorimotorNorms(object):
         self.data[ColNames.word] = self.data[ColNames.word].str.strip()
         self.data[ColNames.word] = self.data[ColNames.word].str.lower()
 
-        self._words: set = set(self.data[ColNames.word])
+        # Convert word column to index
+        self.data.set_index(ColNames.word, inplace=True, drop=False)
 
     def iter_words(self) -> Iterable[str]:
-        for word in self.data[ColNames.word]:
+        for word in self.data.index:
             yield word
 
     def has_word(self, word: str) -> bool:
         """True if a word is in the norms, else False."""
-        return word in self._words
+        return word in self.data.index
 
     def vector_for_word(self, word: str) -> List[float]:
         """
@@ -84,22 +85,12 @@ class SensorimotorNorms(object):
         :return:
         :raises: WordNotInNormsError
         """
-        row = self.data[self.data[ColNames.word] == word]
-
-        # Make sure we only got one row
-        n_rows = row.shape[0]
-        if n_rows is 0:
-            # No rows: word wasn't found
+        try:
+            data_for_word = self.data.loc[word]
+        except KeyError:
             raise WordNotInNormsError(word)
-        elif n_rows > 1:
-            # More than one row: word wasn't a unique row identifier
-            # Something has gone wrong!
-            raise Exception()
 
-        return [
-            row.iloc[0][col_name]
-            for col_name in SensorimotorNorms.VectorColNames
-        ]
+        return list(data_for_word[SensorimotorNorms.VectorColNames])
 
     def fraction_known(self, word: str) -> float:
         """
@@ -137,8 +128,8 @@ class SensorimotorNorms(object):
         :return:
         :raises: WordNotInNormsError
         """
-        for word in words:
-            if not self.has_word(word):
-                raise WordNotInNormsError(word)
-        data_for_words = self.data[self.data[ColNames.word].isin(words)]
+        try:
+            data_for_words = self.data.loc(words)
+        except KeyError as er:
+            raise WordNotInNormsError(er.args[0])
         return data_for_words[SensorimotorNorms.VectorColNames].values
