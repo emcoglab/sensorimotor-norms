@@ -48,6 +48,9 @@ class ColNames(object):
     n_known_action     = "N_known.action"
     n_list_action      = "List_N.action"
 
+    # Derived stats
+    fraction_known = "Fraction.known"
+
 
 class SensorimotorNorms(object):
 
@@ -69,6 +72,10 @@ class SensorimotorNorms(object):
 
         # Convert word column to index
         self.data.set_index(ColNames.word, inplace=True, drop=False)
+
+        # Add computed columns
+
+        self.data[ColNames.fraction_known] = (self.data[ColNames.n_known_perceptual] + self.data[ColNames.n_known_action]) / (self.data[ColNames.n_list_perceptual] + self.data[ColNames.n_list_action])
 
     def iter_words(self) -> Iterable[str]:
         for word in self.data.index:
@@ -102,24 +109,12 @@ class SensorimotorNorms(object):
         :raises: WordNotInNormsError
             When the requested word is not in the norms
         """
-        row = self.data[self.data[ColNames.word] == word]
-
-        # Make sure we only got one row
-        n_rows = row.shape[0]
-        if n_rows is 0:
-            # No rows: word wasn't found
+        try:
+            data_for_word = self.data.loc[word]
+        except KeyError:
             raise WordNotInNormsError(word)
-        elif n_rows > 1:
-            # More than one row: word wasn't a unique row identifier
-            # Something has gone wrong!
-            raise Exception()
 
-        n_known_perceptual = row.iloc[0][ColNames.n_known_perceptual]
-        n_list_perceptual  = row.iloc[0][ColNames.n_list_perceptual]
-        n_known_action     = row.iloc[0][ColNames.n_known_action]
-        n_list_action      = row.iloc[0][ColNames.n_list_action]
-
-        return (n_known_perceptual + n_known_action) / (n_list_perceptual + n_list_action)
+        return data_for_word[ColNames.fraction_known]
 
     def matrix_for_words(self, words: List[str]):
         """
