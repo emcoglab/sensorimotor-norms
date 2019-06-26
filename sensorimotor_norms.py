@@ -124,7 +124,7 @@ class SensorimotorNorms(object):
         :raises: WordNotInNormsError
         """
         try:
-            data_for_words = self.data.loc(words)
+            data_for_words = self.data.loc[words]
         except KeyError as er:
             raise WordNotInNormsError(er.args[0])
         return data_for_words[SensorimotorNorms.VectorColNames].values
