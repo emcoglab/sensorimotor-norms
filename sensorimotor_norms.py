@@ -22,7 +22,7 @@ from .exceptions import WordNotInNormsError
 from .preferences import Preferences
 
 
-class _DataColNames(object):
+class DataColNames(object):
     """Column names used in sensorimotor data file."""
 
     word = "Word"
@@ -94,7 +94,7 @@ class _DataColNames(object):
     # endregion
 
 
-class _ComputedColNames(object):
+class ComputedColNames(object):
     """Additional queryable columns which are computed on load"""
 
     fraction_known = "Fraction.known"
@@ -103,20 +103,20 @@ class _ComputedColNames(object):
 class SensorimotorNorms(object):
 
     SensoryColNames = [
-        _DataColNames.hearing,
-        _DataColNames.tasting,
-        _DataColNames.touch,
-        _DataColNames.interoception,
-        _DataColNames.smelling,
-        _DataColNames.seeing,
+        DataColNames.hearing,
+        DataColNames.tasting,
+        DataColNames.touch,
+        DataColNames.interoception,
+        DataColNames.smelling,
+        DataColNames.seeing,
     ]
 
     MotorColNames = [
-        _DataColNames.foot,
-        _DataColNames.hand,
-        _DataColNames.head,
-        _DataColNames.mouth,
-        _DataColNames.torso,
+        DataColNames.foot,
+        DataColNames.hand,
+        DataColNames.head,
+        DataColNames.mouth,
+        DataColNames.torso,
     ]
 
     VectorColNames = SensoryColNames + MotorColNames
@@ -126,24 +126,24 @@ class SensorimotorNorms(object):
                                         index_col=None, header=0,
                                         dtype={
                                             # Prevent the "nan" item from being interpreted as a NaN
-                                            _DataColNames.word: str,
-                                            _DataColNames.n_known_action: int,
-                                            _DataColNames.n_known_perceptual: int,
-                                            _DataColNames.n_list_action: int,
-                                            _DataColNames.n_list_perceptual: int,
+                                            DataColNames.word: str,
+                                            DataColNames.n_known_action: int,
+                                            DataColNames.n_known_perceptual: int,
+                                            DataColNames.n_list_action: int,
+                                            DataColNames.n_list_perceptual: int,
                                         },
                                         keep_default_na=False)
 
         # Trim whitespace and convert words to lower case
-        self.data[_DataColNames.word] = self.data[_DataColNames.word].str.strip()
-        self.data[_DataColNames.word] = self.data[_DataColNames.word].str.lower()
+        self.data[DataColNames.word] = self.data[DataColNames.word].str.strip()
+        self.data[DataColNames.word] = self.data[DataColNames.word].str.lower()
 
         # Convert word column to index
-        self.data.set_index(_DataColNames.word, inplace=True, drop=False)
+        self.data.set_index(DataColNames.word, inplace=True, drop=False)
 
         # region Add computed columns
 
-        self.data[_ComputedColNames.fraction_known] = (self.data[_DataColNames.n_known_perceptual] + self.data[_DataColNames.n_known_action]) / (self.data[_DataColNames.n_list_perceptual] + self.data[_DataColNames.n_list_action])
+        self.data[ComputedColNames.fraction_known] = (self.data[DataColNames.n_known_perceptual] + self.data[DataColNames.n_known_action]) / (self.data[DataColNames.n_list_perceptual] + self.data[DataColNames.n_list_action])
 
         # endregion
 
@@ -187,7 +187,7 @@ class SensorimotorNorms(object):
         except KeyError:
             raise WordNotInNormsError(word)
 
-        return data_for_word[_ComputedColNames.fraction_known]
+        return data_for_word[ComputedColNames.fraction_known]
 
     def matrix_for_words(self, words: List[str]):
         """
