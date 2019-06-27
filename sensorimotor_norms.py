@@ -22,33 +22,81 @@ from .exceptions import WordNotInNormsError
 from .preferences import Preferences
 
 
-class ColNames(object):
-    """Column names used in sensorimotor data."""
+class _DataColNames(object):
+    """Column names used in sensorimotor data file."""
 
     word = "Word"
 
-    # Motor
-    head          = "Head.mean"
-    mouth         = "Mouth.mean"
-    hand          = "Hand_arm.mean"
-    foot          = "Foot_leg.mean"
-    torso         = "Torso.mean"
+    # region Mean
 
     # Sensory
-    touch         = "Haptic.mean"
     hearing       = "Auditory.mean"
-    seeing        = "Visual.mean"
-    smelling      = "Olfactory.mean"
     tasting       = "Gustatory.mean"
+    touch         = "Haptic.mean"
     interoception = "Interoceptive.mean"
+    smelling      = "Olfactory.mean"
+    seeing        = "Visual.mean"
 
-    # Other stats
+    # Motor
+    foot          = "Foot_leg.mean"
+    hand          = "Hand_arm.mean"
+    head          = "Head.mean"
+    mouth         = "Mouth.mean"
+    torso         = "Torso.mean"
+
+    # endregion
+
+    # region SD
+
+    # Sensory
+    hearing_sd       = "Auditory.SD"
+    tasting_sd       = "Gustatory.SD"
+    touch_sd         = "Haptic.SD"
+    interoception_sd = "Interoceptive.SD"
+    smelling_sd      = "Olfactory.SD"
+    seeing_sd        = "Visual.SD"
+
+    # Motor
+    foot_sd          = "Foot_leg.SD"
+    hand_sd          = "Hand_arm.SD"
+    head_sd          = "Head.SD"
+    mouth_sd         = "Mouth.SD"
+    torso_sd         = "Torso.SD"
+
+    # endregion
+
+    # region Other stats
+
+    max_strength_perceptual   = "Max_strength.perceptual"
+    minkowski3_perceptual     = "Minkowski3.perceptual"
+    exclusivity_perceptual    = "Exclusivity.perceptual"
+    dominant_perceptual       = "Dominant.perceptual"
+    max_strength_action       = "Max_strength.action"
+    minkowski3_action         = "Minkowski3.action"
+    exclusivity_action        = "Exclusivity.action"
+    dominant_action           = "Dominant.action"
+    max_strength_sensorimotor = "Max_strength.sensorimotor"
+    minkowski3_sensorimotor   = "Minkowski3.sensorimotor"
+    exclusivity_sensorimotor  = "Exclusivity.sensorimotor"
+    dominant_sensorimotor     = "Dominant.sensorimotor"
+
     n_known_perceptual = "N_known.perceptual"
     n_list_perceptual  = "List_N.perceptual"
     n_known_action     = "N_known.action"
     n_list_action      = "List_N.action"
 
-    # Derived stats
+    percentage_known_action = "Percentage_known.action"
+    mean_age_perceptual     = "Mean_age.perceptual"
+    mean_age_action         = "Mean_age.action"
+    list_no_perceptual      = "List#.perceptual"
+    list_no_action          = "List#.action"
+
+    # endregion
+
+
+class _ComputedColNames(object):
+    """Additional queryable columns which are computed on load"""
+
     fraction_known = "Fraction.known"
 
 
@@ -56,26 +104,48 @@ class SensorimotorNorms(object):
 
     VectorColNames = [
         # Sensory
-        ColNames.touch, ColNames.hearing, ColNames.seeing, ColNames.smelling, ColNames.tasting, ColNames.interoception,
+        _DataColNames.hearing,
+        _DataColNames.tasting,
+        _DataColNames.touch,
+        _DataColNames.interoception,
+        _DataColNames.smelling,
+        _DataColNames.seeing,
         # Motor
-        ColNames.head, ColNames.mouth, ColNames.hand, ColNames.foot, ColNames.torso,
+        _DataColNames.foot,
+        _DataColNames.hand,
+        _DataColNames.head,
+        _DataColNames.mouth,
+        _DataColNames.torso,
     ]
 
     def __init__(self):
-        self.data: DataFrame = read_csv(Preferences.sensorimotor_norms_path, index_col=None, header=0,
-                                        # Prevent the "nan" item from being interpreted as a NaN
-                                        dtype={ColNames.word: str}, keep_default_na=False)
+        self.data: DataFrame = read_csv(Preferences.sensorimotor_norms_path,
+                                        index_col=None, header=0,
+                                        dtype={
+                                            # Prevent the "nan" item from being interpreted as a NaN
+                                            _DataColNames.word: str,
+                                            _DataColNames.n_known_action: int,
+                                            _DataColNames.n_known_perceptual: int,
+                                            _DataColNames.n_list_action: int,
+                                            _DataColNames.n_list_perceptual: int,
+                                        },
+                                        keep_default_na=False)
 
         # Trim whitespace and convert words to lower case
-        self.data[ColNames.word] = self.data[ColNames.word].str.strip()
-        self.data[ColNames.word] = self.data[ColNames.word].str.lower()
+        self.data[_DataColNames.word] = self.data[_DataColNames.word].str.strip()
+        self.data[_DataColNames.word] = self.data[_DataColNames.word].str.lower()
 
         # Convert word column to index
-        self.data.set_index(ColNames.word, inplace=True, drop=False)
+        self.data.set_index(_DataColNames.word, inplace=True, drop=False)
 
-        # Add computed columns
+        # region Add computed columns
 
-        self.data[ColNames.fraction_known] = (self.data[ColNames.n_known_perceptual] + self.data[ColNames.n_known_action]) / (self.data[ColNames.n_list_perceptual] + self.data[ColNames.n_list_action])
+        self.data[_ComputedColNames.fraction_known] = (self.data[_DataColNames.n_known_perceptual] + self.data[_DataColNames.n_known_action]) / (self.data[_DataColNames.n_list_perceptual] + self.data[_DataColNames.n_list_action])
+
+        # endregion
+
+        self.n_items = len(list(self.iter_words()))
+        self.n_dims = len(self.VectorColNames)
 
     def iter_words(self) -> Iterable[str]:
         for word in self.data.index:
@@ -114,7 +184,7 @@ class SensorimotorNorms(object):
         except KeyError:
             raise WordNotInNormsError(word)
 
-        return data_for_word[ColNames.fraction_known]
+        return data_for_word[_ComputedColNames.fraction_known]
 
     def matrix_for_words(self, words: List[str]):
         """
