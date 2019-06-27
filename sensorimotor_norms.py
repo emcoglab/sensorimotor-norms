@@ -102,21 +102,24 @@ class _ComputedColNames(object):
 
 class SensorimotorNorms(object):
 
-    VectorColNames = [
-        # Sensory
+    SensoryColNames = [
         _DataColNames.hearing,
         _DataColNames.tasting,
         _DataColNames.touch,
         _DataColNames.interoception,
         _DataColNames.smelling,
         _DataColNames.seeing,
-        # Motor
+    ]
+
+    MotorColNames = [
         _DataColNames.foot,
         _DataColNames.hand,
         _DataColNames.head,
         _DataColNames.mouth,
         _DataColNames.torso,
     ]
+
+    VectorColNames = SensoryColNames + MotorColNames
 
     def __init__(self):
         self.data: DataFrame = read_csv(Preferences.sensorimotor_norms_path,
