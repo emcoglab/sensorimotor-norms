@@ -85,11 +85,12 @@ class DataColNames(object):
     n_known_action     = "N_known.action"
     n_list_action      = "List_N.action"
 
-    percentage_known_action = "Percentage_known.action"
-    mean_age_perceptual     = "Mean_age.perceptual"
-    mean_age_action         = "Mean_age.action"
-    list_no_perceptual      = "List#.perceptual"
-    list_no_action          = "List#.action"
+    percentage_known_perceptual = "Percent_known.perceptual"
+    percentage_known_action     = "Percentage_known.action"
+    mean_age_perceptual         = "Mean_age.perceptual"
+    mean_age_action             = "Mean_age.action"
+    list_no_perceptual          = "List#.perceptual"
+    list_no_action              = "List#.action"
 
     # endregion
 
@@ -97,7 +98,7 @@ class DataColNames(object):
 class ComputedColNames(object):
     """Additional queryable columns which are computed on load"""
 
-    fraction_known = "Fraction.known"
+    fraction_known = "Percentage_known.sensorimotor"
 
 
 class SensorimotorNorms(object):
@@ -111,12 +112,29 @@ class SensorimotorNorms(object):
         DataColNames.seeing,
     ]
 
+    SensorySDColNames = [
+        DataColNames.hearing_sd,
+        DataColNames.tasting_sd,
+        DataColNames.touch_sd,
+        DataColNames.interoception_sd,
+        DataColNames.smelling_sd,
+        DataColNames.seeing_sd,
+    ]
+
     MotorColNames = [
         DataColNames.foot,
         DataColNames.hand,
         DataColNames.head,
         DataColNames.mouth,
         DataColNames.torso,
+    ]
+
+    MotorSDColNames = [
+        DataColNames.foot_sd,
+        DataColNames.hand_sd,
+        DataColNames.head_sd,
+        DataColNames.mouth_sd,
+        DataColNames.torso_sd,
     ]
 
     VectorColNames = SensoryColNames + MotorColNames
