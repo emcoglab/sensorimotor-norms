@@ -14,6 +14,7 @@ caiwingfield.net
 2019
 ---------------------------
 """
+from random import randint
 from typing import List, Iterable
 
 from pandas import DataFrame, read_csv
@@ -171,6 +172,9 @@ class SensorimotorNorms(object):
     def iter_words(self) -> Iterable[str]:
         for word in self.data.index:
             yield word
+
+    def random_word(self) -> str:
+        return self.data[DataColNames.word].iloc[randint(0, self.n_items-1)]
 
     def has_word(self, word: str) -> bool:
         """True if a word is in the norms, else False."""
