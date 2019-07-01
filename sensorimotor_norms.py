@@ -20,7 +20,7 @@ from typing import List, Iterable
 from pandas import DataFrame, read_csv
 
 from .exceptions import WordNotInNormsError
-from .preferences import Preferences
+from .config.preferences import Preferences
 
 
 class DataColNames(object):
