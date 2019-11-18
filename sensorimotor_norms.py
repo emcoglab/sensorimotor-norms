@@ -223,3 +223,6 @@ class SensorimotorNorms(object):
         except KeyError as er:
             raise WordNotInNormsError(er.args[0])
         return data_for_words[SensorimotorNorms.VectorColNames].values
+
+    def matrix(self):
+        return self.data[SensorimotorNorms.VectorColNames].values
