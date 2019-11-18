@@ -36,17 +36,21 @@ class Config(metaclass=UnsettableSingleton):
     def __exit__(self, exc_type, exc_val, exc_tb):
         Config._unset()
 
-    def __init__(self, use_config_overrides_from_file: str = None):
+    def __init__(self, use_config_overrides_from_file: str = None, use_particular_overrides: Dict = None):
         default_config_file_location = path.join(path.dirname(path.realpath(__file__)), 'default_config.yaml')
 
-        if use_config_overrides_from_file is None:
+        if use_particular_overrides is not None:
             print(f"Loading config file from {default_config_file_location} "
-                  f"with no override.")
-            self.overridden = False
-        else:
+                  f"with specific overrides set")
+            self.overridden = True
+        elif use_config_overrides_from_file is not None:
             print(f"Loading config file from {default_config_file_location} "
                   f"with overrides from {use_config_overrides_from_file}")
             self.overridden = True
+        else:
+            print(f"Loading config file from {default_config_file_location} "
+                  f"with no override.")
+            self.overridden = False
 
         # Load files
         self._config_default: Dict
@@ -58,6 +62,12 @@ class Config(metaclass=UnsettableSingleton):
                 self._config_override = yaml.load(override_config_file, yaml.SafeLoader)
         else:
             self._config_override = None
+
+        # Apply particular overrides
+        if use_particular_overrides is not None:
+            self._specific_overrides: Dict = use_particular_overrides
+        else:
+            self._specific_overrides: Dict = dict()
 
     @staticmethod
     def _get_value(config_dict: Dict, *args):
@@ -80,11 +90,15 @@ class Config(metaclass=UnsettableSingleton):
             raise ConfigKeyNotSetError()
 
     def value_by_key_path(self, *args):
-        # try with override
+        try:
+            return Config._get_value(self._specific_overrides, *args)
+        except ConfigKeyNotSetError:
+            pass
         try:
             return Config._get_value(self._config_override, *args)
         except ConfigKeyNotSetError:
-            return Config._get_value(self._config_default, *args)
+            pass
+        return Config._get_value(self._config_default, *args)
 
 
 class ConfigKeyNotSetError(KeyError):
