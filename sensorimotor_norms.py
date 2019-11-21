@@ -17,6 +17,7 @@ caiwingfield.net
 from random import randint
 from typing import List, Iterable
 
+from numpy import array
 from pandas import DataFrame, read_csv
 
 from .exceptions import WordNotInNormsError
@@ -150,6 +151,11 @@ class SensorimotorNorms(object):
                                             DataColNames.n_known_perceptual: int,
                                             DataColNames.n_list_action: int,
                                             DataColNames.n_list_perceptual: int,
+                                            # All vector cols are floats
+                                            **{
+                                                vector_col: float
+                                                for vector_col in SensorimotorNorms.VectorColNames
+                                            }
                                         },
                                         keep_default_na=False)
 
@@ -180,7 +186,7 @@ class SensorimotorNorms(object):
         """True if a word is in the norms, else False."""
         return word in self.data.index
 
-    def vector_for_word(self, word: str):
+    def vector_for_word(self, word: str) -> array:
         """
         A vector of sensorimotor data associated with each word.
         :param word:
@@ -192,7 +198,7 @@ class SensorimotorNorms(object):
         except KeyError:
             raise WordNotInNormsError(word)
 
-        return data_for_word[SensorimotorNorms.VectorColNames].values
+        return data_for_word[SensorimotorNorms.VectorColNames].values.astype(float)
 
     def fraction_known(self, word: str) -> float:
         """
@@ -211,7 +217,7 @@ class SensorimotorNorms(object):
 
         return data_for_word[ComputedColNames.fraction_known]
 
-    def matrix_for_words(self, words: List[str]):
+    def matrix_for_words(self, words: List[str]) -> array:
         """
         Returns a data matrix of words-x-dims.
         :param words:
@@ -222,7 +228,7 @@ class SensorimotorNorms(object):
             data_for_words = self.data.loc[words]
         except KeyError as er:
             raise WordNotInNormsError(er.args[0])
-        return data_for_words[SensorimotorNorms.VectorColNames].values
+        return data_for_words[SensorimotorNorms.VectorColNames].values.astype(float)
 
-    def matrix(self):
-        return self.data[SensorimotorNorms.VectorColNames].values
+    def matrix(self) -> array:
+        return self.data[SensorimotorNorms.VectorColNames].values.astype(float)
