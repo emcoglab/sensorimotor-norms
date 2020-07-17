@@ -20,8 +20,10 @@ from typing import List, Iterable
 from numpy import array
 from pandas import DataFrame, read_csv
 
-from .exceptions import WordNotInNormsError
-from .config.preferences import Preferences
+from breng_translation.translation_logic import select_best_translations
+# noinspection PyCompatibility
+from exceptions import WordNotInNormsError
+from config.preferences import Preferences
 
 
 class DataColNames(object):
@@ -100,6 +102,7 @@ class DataColNames(object):
 class ComputedColNames(object):
     """Additional queryable columns which are computed on load"""
 
+    word_breng     = "Word.BrEng"
     fraction_known = "Percentage_known.sensorimotor"
 
 
@@ -162,6 +165,11 @@ class SensorimotorNorms(object):
         # Trim whitespace and convert words to lower case
         self.data[DataColNames.word] = self.data[DataColNames.word].str.strip()
         self.data[DataColNames.word] = self.data[DataColNames.word].str.lower()
+
+        # Add BrEng translations for words
+        translations = select_best_translations(self.data[DataColNames.word])
+        self.data[ComputedColNames.word_breng] = self.data[DataColNames.word].map(translations)
+        # TODO: assert unique BrEng labels
 
         # Convert word column to index
         self.data.set_index(DataColNames.word, inplace=True, drop=False)
@@ -232,3 +240,7 @@ class SensorimotorNorms(object):
 
     def matrix(self) -> array:
         return self.data[SensorimotorNorms.VectorColNames].values.astype(float)
+
+
+if __name__ == '__main__':
+    sn = SensorimotorNorms()
