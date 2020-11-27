@@ -16,12 +16,17 @@ caiwingfield.net
 """
 from random import randint
 from typing import List, Iterable
+from logging import getLogger
 
 from numpy import array
 from pandas import DataFrame, read_csv
 
-from .exceptions import WordNotInNormsError
-from .config.preferences import Preferences
+from breng_translation.translation_logic import select_best_translations
+from exceptions import WordNotInNormsError
+from config.preferences import Preferences
+
+
+logger = getLogger(__name__)
 
 
 class DataColNames(object):
@@ -141,7 +146,10 @@ class SensorimotorNorms(object):
 
     VectorColNames = SensoryColNames + MotorColNames
 
-    def __init__(self):
+    def __init__(self,
+                 use_breng_translation: bool = False,
+                 verbose: bool = False,
+                 ):
         self.data: DataFrame = read_csv(Preferences.sensorimotor_norms_path,
                                         index_col=None, header=0,
                                         dtype={
@@ -162,6 +170,15 @@ class SensorimotorNorms(object):
         # Trim whitespace and convert words to lower case
         self.data[DataColNames.word] = self.data[DataColNames.word].str.strip()
         self.data[DataColNames.word] = self.data[DataColNames.word].str.lower()
+
+        # Apply BrEng translation if necessary
+        self.using_breng_translation: bool = use_breng_translation
+        if use_breng_translation:
+            logger.info("Using BrEng translations")
+            translations = select_best_translations(list(self.data[DataColNames.word]), verbose=verbose)
+            self.data[DataColNames.word] = self.data[DataColNames.word].map(translations)
+            # Make sure the labels are unique
+            assert len(list(self.data[DataColNames.word])) == len(set(self.data[DataColNames.word]))
 
         # Convert word column to index
         self.data.set_index(DataColNames.word, inplace=True, drop=False)
@@ -232,3 +249,13 @@ class SensorimotorNorms(object):
 
     def matrix(self) -> array:
         return self.data[SensorimotorNorms.VectorColNames].values.astype(float)
+
+
+if __name__ == '__main__':
+    from logging import basicConfig, INFO
+
+    basicConfig(level=INFO,
+                format="%(asctime)s | %(levelname)s | %(module)s | %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S")
+
+    sn = SensorimotorNorms(use_breng_translation=True, verbose=True)
