@@ -21,7 +21,6 @@ from numpy import array
 from pandas import DataFrame, read_csv
 
 from breng_translation.translation_logic import select_best_translations
-# noinspection PyCompatibility
 from exceptions import WordNotInNormsError
 from config.preferences import Preferences
 

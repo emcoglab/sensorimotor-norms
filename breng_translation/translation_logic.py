@@ -5,12 +5,19 @@ from .dictionary.dialect_dictionary import ameng_to_breng
 
 
 def select_best_translations(words: Iterable[str]) -> Dict[str, str]:
-    # Best option for each case
+    """
+
+    :param words:
+    :return:
+    """
+
+    # Available options for each case
     candidates: Dict[str, List[str]] = {
         word: ameng_to_breng.translations_for(word)
         for word in words
     }
 
+    # Best option for each case
     preferred: Dict[str, str] = {
         word: translations[0]
         for word, translations in candidates.items()
