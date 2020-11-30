@@ -21,9 +21,9 @@ from logging import getLogger
 from numpy import array
 from pandas import DataFrame, read_csv
 
-from breng_translation.translation_logic import select_best_translations
-from exceptions import WordNotInNormsError
-from config.preferences import Preferences
+from .breng_translation.translation_logic import select_best_translations
+from .exceptions import WordNotInNormsError
+from .config.preferences import Preferences
 
 
 logger = getLogger(__name__)
