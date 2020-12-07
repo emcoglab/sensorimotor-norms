@@ -21,7 +21,6 @@ from logging import getLogger
 from numpy import array
 from pandas import DataFrame, read_csv
 
-from .breng_translation.translation_logic import select_best_translations
 from .exceptions import WordNotInNormsError
 from .config.preferences import Preferences
 
@@ -174,6 +173,7 @@ class SensorimotorNorms(object):
         # Apply BrEng translation if necessary
         self.using_breng_translation: bool = use_breng_translation
         if use_breng_translation:
+            from .breng_translation.translation_logic import select_best_translations
             logger.info("Using BrEng translations")
             translations = select_best_translations(list(self.data[DataColNames.word]), verbose=verbose)
             self.data[DataColNames.word] = self.data[DataColNames.word].map(translations)
