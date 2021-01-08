@@ -39,7 +39,8 @@ def select_best_translations(words: Iterable[str], verbose: bool = False) -> Dic
         # If the word is untranslatable, we leave as-is
         if len(available_translations) == 0:
             if translations_were_available and verbose:
-                logger.info(f"Tried to translate {word} but all translations already supplied: {', '.join(ameng_to_breng.translations_for(word))}")
+                logger.info(f"Tried to translate {word} but all translations already supplied: "
+                            f"{', '.join(ameng_to_breng.translations_for(word))}")
             translations[word] = word
             continue
 
