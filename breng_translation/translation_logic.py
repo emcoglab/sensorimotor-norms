@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Iterable, Dict
+from typing import Iterable, Dict, Set
 from logging import getLogger
 
 from .dictionary.dialect_dictionary import ameng_to_breng
@@ -8,62 +8,79 @@ from .dictionary.vocabulary import ameng_counter, breng_counter
 logger = getLogger(__name__)
 
 
+def _select_best_translation(word: str, other_words: Set[str], verbose: bool = False) -> str:
+
+    available_translations = ameng_to_breng.translations_for(word)
+    translations_were_available = len(available_translations) > 0
+    available_translations = [
+        t
+        for t in available_translations
+        # Disallow translations to a word which are already in the norms
+        if t not in other_words
+    ]
+
+    # If the word is untranslatable, we leave as-is
+    if len(available_translations) == 0:
+        if translations_were_available and verbose:
+            logger.info(f"Tried to translate {word} but all translations already supplied: "
+                        f"{', '.join(ameng_to_breng.translations_for(word))}")
+        return word
+
+    # Pick the best translation
+    for t in available_translations:
+        # Disallow translations to a word which is already in the norms
+        if t in other_words:
+            continue
+        return t
+
+    # If we exhausted translations, just don't translate
+    if verbose:
+        logger.info(f"Exhausted translation options for {word}")
+    return word
+
+
 def select_best_translations(words: Iterable[str], verbose: bool = False) -> Dict[str, str]:
     """
-
+    Selects the single best translation for each of the words in the input
     :param words:
     :return:
     :raises: ValueError
     """
+
+    words = set(words)
 
     # The final translations
     translations: Dict[str, str] = dict()
 
     # Select best translations
     for word in words:
-        # Where the norm is untranslatable, we leave as-is
-        if word not in ameng_to_breng.source_vocab:
-            translations[word] = word
-            continue
 
-        # Otherwise we go with the best translation
-        available_translations = ameng_to_breng.translations_for(word)
-        translations_were_available = len(available_translations) > 0
-        # Disallow translations to a word which are already in the norms
-        available_translations = [
-            t
-            for t in available_translations
-            if t not in words
-        ]
+        # Translate directly where we can use the dictionary to do so
+        if word in ameng_to_breng.source_vocab:
+            translations[word] = _select_best_translation(word, other_words=words-{word}, verbose=verbose)
 
-        # If the word is untranslatable, we leave as-is
-        if len(available_translations) == 0:
-            if translations_were_available and verbose:
-                logger.info(f"Tried to translate {word} but all translations already supplied: "
-                            f"{', '.join(ameng_to_breng.translations_for(word))}")
-            translations[word] = word
-            continue
+        # If we can't use the dictionary directly, we try and break the word up into tokens and use the dictionary on
+        # those
+        elif " " in word:
+            # It's a multi-word term
+            tokens = word.split(" ")
+            translated_tokens = []
+            for token in tokens:
+                translated_tokens.append(_select_best_translation(token, set()))
+            translated_multiword = " ".join(translated_tokens)
+            # Make sure we don't generate a collision
+            translations[word] = translated_multiword if translated_multiword not in words else word
 
-        # Pick the best translation
-        for t in available_translations:
-            # Disallow translations to a word which is already in the norms
-            if t in words:
-                continue
-            translations[word] = t
-            break
-
-        # If we exhausted translations, just don't translate
-        if word not in translations:
-            if verbose:
-                logger.info(f"Exhausted translation options for {word}")
+        # Otherwise it's an untranslatable single word, there's nothing further we can do
+        else:
             translations[word] = word
 
-    collisions = find_collisions(translations)
+    collisions = _find_collisions(translations)
 
     collision_avoidance = dict()
     for target, sources in collisions.items():
         if verbose:
-            logger.info(f"Collision wit {', '.join(sources)} all pointing to {target}. Trying to avoid...")
+            logger.info(f"Collision found: {', '.join(sources)} all point to {target}. Trying to avoid...")
         # Order source words by AmEng dominance
         sources = sorted(sources, key=lambda w: ameng_counter[w], reverse=True)
         for source in sources:
@@ -97,13 +114,14 @@ def select_best_translations(words: Iterable[str], verbose: bool = False) -> Dic
         translations[s] = t
 
     # Make sure we're done
-    collisions = find_collisions(translations)
+    collisions = _find_collisions(translations)
     assert len(collisions) == 0
 
     return translations
 
 
-def find_collisions(translations):
+def _find_collisions(translations):
+    """Finds examples where multiple sources end in the same target."""
     # target -> source
     collisions = defaultdict(list)
     for k, v in translations.items():
