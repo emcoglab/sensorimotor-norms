@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Iterable, Dict, Set
+from typing import Iterable, Dict, Set, Callable
 from logging import getLogger
 
 from .dictionary.dialect_dictionary import ameng_to_breng
@@ -127,10 +127,17 @@ def _find_collisions(translations) -> Dict:
     for k, v in translations.items():
         collisions[v].append(k)
     # Forget the cases where there aren't any collisions
-    forget = []
-    for target, sources in collisions.items():
-        if len(sources) == 1:
-            forget.append(target)
-    for target in forget:
-        del collisions[target]
+    _forget_keys_for_values_satisfying(collisions, lambda v: len(v) == 1)
     return dict(collisions)
+
+def _forget_keys_for_values_satisfying(dictionary: Dict, predicate: Callable):
+    """
+    For a dict `dictionary` and a predicate `predicate` (mapping objects to bools), this function will delete all keys
+    from the `dictionary` iff their associated values evaluate to `True`.
+    """
+    keys_to_forget = []
+    for k, v in dictionary.items():
+        if predicate(v):
+            keys_to_forget.append(k)
+    for k in keys_to_forget:
+        del dictionary[k]
