@@ -99,7 +99,7 @@ def select_best_translations(words: Iterable[str], verbose: bool = False) -> Dic
             ]
             # Pick the best one available
             available_translations = sorted(available_translations, key=lambda w: breng_counter[w], reverse=True)
-
+            # Get the first one if there is a first one
             for t in available_translations:
                 collision_avoidance[source] = t
                 break
@@ -120,7 +120,7 @@ def select_best_translations(words: Iterable[str], verbose: bool = False) -> Dic
     return translations
 
 
-def _find_collisions(translations):
+def _find_collisions(translations) -> Dict:
     """Finds examples where multiple sources end in the same target."""
     # target -> source
     collisions = defaultdict(list)
@@ -133,4 +133,4 @@ def _find_collisions(translations):
             forget.append(target)
     for target in forget:
         del collisions[target]
-    return collisions
+    return dict(collisions)
