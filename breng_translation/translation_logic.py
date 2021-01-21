@@ -5,7 +5,7 @@ from logging import getLogger
 from .dictionary.dialect_dictionary import ameng_to_breng
 from .dictionary.vocabulary import ameng_counter, breng_counter
 
-logger = getLogger(__name__)
+_logger = getLogger(__name__)
 
 
 def _select_best_translation(word: str, other_words: Set[str], verbose: bool = False) -> str:
@@ -22,8 +22,8 @@ def _select_best_translation(word: str, other_words: Set[str], verbose: bool = F
     # If the word is untranslatable, we leave as-is
     if len(available_translations) == 0:
         if translations_were_available and verbose:
-            logger.info(f"Tried to translate {word} but all translations already supplied: "
-                        f"{', '.join(ameng_to_breng.translations_for(word))}")
+            _logger.info(f"Tried to translate {word} but all translations already supplied: "
+                         f"{', '.join(ameng_to_breng.translations_for(word))}")
         return word
 
     # Pick the best translation
@@ -35,7 +35,7 @@ def _select_best_translation(word: str, other_words: Set[str], verbose: bool = F
 
     # If we exhausted translations, just don't translate
     if verbose:
-        logger.info(f"Exhausted translation options for {word}")
+        _logger.info(f"Exhausted translation options for {word}")
     return word
 
 
@@ -80,7 +80,7 @@ def select_best_translations(words: Iterable[str], verbose: bool = False) -> Dic
     collision_avoidance = dict()
     for target, sources in collisions.items():
         if verbose:
-            logger.info(f"Collision found: {', '.join(sources)} all point to {target}. Trying to avoid...")
+            _logger.info(f"Collision found: {', '.join(sources)} all point to {target}. Trying to avoid...")
         # Order source words by AmEng dominance
         sources = sorted(sources, key=lambda w: ameng_counter[w], reverse=True)
         for source in sources:
@@ -106,7 +106,7 @@ def select_best_translations(words: Iterable[str], verbose: bool = False) -> Dic
             # If we didn't avoid collisions, just bail on translating it
             if source not in collision_avoidance:
                 if verbose:
-                    logger.info(f"Ran out of collision avoidance options for {source}")
+                    _logger.info(f"Ran out of collision avoidance options for {source}")
                 collision_avoidance[source] = source
 
     # Apply collision avoidance
@@ -129,6 +129,7 @@ def _find_collisions(translations) -> Dict:
     # Forget the cases where there aren't any collisions
     _forget_keys_for_values_satisfying(collisions, lambda v: len(v) == 1)
     return dict(collisions)
+
 
 def _forget_keys_for_values_satisfying(dictionary: Dict, predicate: Callable):
     """
