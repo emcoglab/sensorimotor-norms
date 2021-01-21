@@ -52,8 +52,8 @@ def select_best_translations(words: Iterable[str], verbose: bool = False) -> Dic
     # The final translations
     translations: Dict[str, str] = dict()
 
-    # Select best translations
-    for word in words:
+    # Look through words in a fixed order
+    for word in sorted(words):
 
         # Translate directly where we can use the dictionary to do so
         if word in ameng_to_breng.source_vocab:
@@ -86,18 +86,13 @@ def select_best_translations(words: Iterable[str], verbose: bool = False) -> Dic
         for source in sources:
             # By default, the dictionary won't offer "anesthetise" as a translation for "anaesthetise".
             # So we have to pool translations of the collision sources.
-            available_translations = {
+            available_translations = [
                 t
                 for s in sources
                 for t in ameng_to_breng.translations_for(s)
-            }
-            # Don't accidentally cause another collision
-            available_translations = [
-                t
-                for t in available_translations
+                # Don't accidentally cause another collision
                 if (t not in words) and (t not in collision_avoidance.values())
             ]
-            # Pick the best one available
             available_translations = sorted(available_translations, key=lambda w: breng_counter[w], reverse=True)
             # Get the first one if there is a first one
             for t in available_translations:
@@ -114,14 +109,18 @@ def select_best_translations(words: Iterable[str], verbose: bool = False) -> Dic
         translations[s] = t
 
     # Make sure we're done
-    collisions = _find_collisions(translations)
-    assert len(collisions) == 0
+    assert len(_find_collisions(translations)) == 0
 
     return translations
 
 
 def _find_collisions(translations) -> Dict:
-    """Finds examples where multiple sources end in the same target."""
+    """
+    Finds examples where multiple sources end in the same target.
+    :param translations:
+        Candidate dictionary of translations to check for collisions
+    :return:
+    """
     # target -> source
     collisions = defaultdict(list)
     for k, v in translations.items():
