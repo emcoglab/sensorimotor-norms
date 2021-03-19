@@ -192,6 +192,9 @@ class SensorimotorNorms(object):
         self.n_items = len(list(self.iter_words()))
         self.n_dims = len(self.VectorColNames)
 
+        self.rating_min = 0.0
+        self.rating_max = 5.0
+
     def iter_words(self) -> Iterable[str]:
         for word in self.data.index:
             yield word
