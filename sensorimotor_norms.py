@@ -253,6 +253,18 @@ class SensorimotorNorms(object):
     def matrix(self) -> array:
         return self.data[SensorimotorNorms.VectorColNames].values.astype(float)
 
+    def stat_for_word(self, word: str, stat_col: str) -> float:
+        """
+        Look up a statistical value from the data by its column name.
+        :raises WordNotInNormsError: When the word is in correct.
+        :raises KeyError: When the column is not in the data.
+        """
+        try:
+            data_for_word = self.data.loc[word]
+        except KeyError:
+            raise WordNotInNormsError(word)
+        return data_for_word[stat_col]
+
 
 if __name__ == '__main__':
     from logging import basicConfig, INFO
