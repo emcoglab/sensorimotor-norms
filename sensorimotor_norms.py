@@ -206,7 +206,7 @@ class SensorimotorNorms(object):
         """True if a word is in the norms, else False."""
         return word in self.data.index
 
-    def vector_for_word(self, word: str) -> array:
+    def sensorimotor_vector_for_word(self, word: str) -> array:
         """
         A vector of sensorimotor data associated with each word.
         :param word:
@@ -219,6 +219,34 @@ class SensorimotorNorms(object):
             raise WordNotInNormsError(word)
 
         return data_for_word[SensorimotorNorms.VectorColNames].values.astype(float)
+
+    def sensory_vector_for_word(self, word: str) -> array:
+        """
+        A vector of sensory (only) data associated with each word.
+        :param word:
+        :return:
+        :raises: WordNotInNormsError
+        """
+        try:
+            data_for_word = self.data.loc[word]
+        except KeyError:
+            raise WordNotInNormsError(word)
+
+        return data_for_word[SensorimotorNorms.SensoryColNames].values.astype(float)
+
+    def motor_vector_for_word(self, word: str) -> array:
+        """
+        A vector of motor (only) data associated with each word.
+        :param word:
+        :return:
+        :raises: WordNotInNormsError
+        """
+        try:
+            data_for_word = self.data.loc[word]
+        except KeyError:
+            raise WordNotInNormsError(word)
+
+        return data_for_word[SensorimotorNorms.MotorColNames].values.astype(float)
 
     def fraction_known(self, word: str) -> float:
         """
